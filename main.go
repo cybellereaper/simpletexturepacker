@@ -12,6 +12,7 @@ import (
 	"sync"
 )
 
+// Rectangle represents an image with an ID, width, height, and the image data itself.
 type Rectangle struct {
 	ID     int
 	Width  int
@@ -19,12 +20,16 @@ type Rectangle struct {
 	Image  image.Image
 }
 
+// Shelf represents a horizontal shelf for packing rectangles in the texture atlas.
 type Shelf struct {
 	Y      int
 	Height int
 	Width  int
 }
 
+// main is the entry point of the program. It parses command-line flags,
+// collects image files from a directory, loads and processes them,
+// generates a texture atlas, saves it as 'atlas.png', and prints atlas information.
 func main() {
 	maxHeight, filedir := parseFlags()
 	files, err := collectImageFiles(filedir)
@@ -49,6 +54,8 @@ func main() {
 	printAtlasInfo(atlas.Bounds().Max.X, atlas.Bounds().Max.Y, packedRectangles)
 }
 
+// parseFlags parses command-line flags to retrieve the maximum height
+// of the texture atlas and the directory containing image files.
 func parseFlags() (int, string) {
 	maxHeight := flag.Int("maxheight", 1080, "Maximum height of the texture atlas")
 	filedir := flag.String("filedir", "", "Directory containing image files")
@@ -62,6 +69,7 @@ func parseFlags() (int, string) {
 	return *maxHeight, *filedir
 }
 
+// collectImageFiles retrieves a list of image files from the specified directory.
 func collectImageFiles(filedir string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(filedir, func(path string, info os.FileInfo, err error) error {
@@ -76,6 +84,7 @@ func collectImageFiles(filedir string) ([]string, error) {
 	return files, err
 }
 
+// isImageFile checks if the given filename has a supported image file extension.
 func isImageFile(filename string) bool {
 	switch filepath.Ext(filename) {
 	case ".png", ".jpg", ".jpeg", ".gif", ".bmp":
@@ -85,6 +94,8 @@ func isImageFile(filename string) bool {
 	}
 }
 
+// loadImages loads image files concurrently, sorts them by height,
+// and returns a slice of rectangles representing each loaded image.
 func loadImages(files []string) ([]Rectangle, error) {
 	rectangles := make([]Rectangle, len(files))
 	var wg sync.WaitGroup
@@ -122,6 +133,8 @@ func loadImages(files []string) ([]Rectangle, error) {
 	return rectangles, nil
 }
 
+// loadImages loads image files concurrently, sorts them by height,
+// and returns a slice of rectangles representing each loaded image.
 func loadImage(file string) (image.Image, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -137,6 +150,9 @@ func loadImage(file string) (image.Image, error) {
 	return img, nil
 }
 
+// generateAtlas packs the provided rectangles into a texture atlas image
+// using a shelf packing algorithm and returns the texture atlas image
+// along with the mapping of rectangle IDs to their positions in the atlas.
 func generateAtlas(rectangles []Rectangle, maxHeight int) (*image.RGBA, map[int]image.Rectangle) {
 	packedRectangles := make(map[int]image.Rectangle)
 	shelves := []Shelf{{Y: 0, Height: 0, Width: 0}}
@@ -176,6 +192,7 @@ func generateAtlas(rectangles []Rectangle, maxHeight int) (*image.RGBA, map[int]
 	return atlas, packedRectangles
 }
 
+// saveAtlas saves the texture atlas image as a PNG file with the specified filename.
 func saveAtlas(filename string, atlas *image.RGBA) error {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -187,6 +204,8 @@ func saveAtlas(filename string, atlas *image.RGBA) error {
 	return encoder.Encode(f, atlas)
 }
 
+// printAtlasInfo prints information about the generated texture atlas,
+// including its dimensions and the positions of packed rectangles.
 func printAtlasInfo(width, height int, packedRectangles map[int]image.Rectangle) {
 	fmt.Printf("Atlas size: %d x %d\n", width, height)
 	fmt.Println("Packed rectangles:")
