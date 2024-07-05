@@ -1,4 +1,4 @@
-# Texture Atlas Generator
+# Simple Texture Packer
 
 This command-line tool generates a texture atlas from a directory of image files. A texture atlas is a large image that contains several smaller images packed together, which is commonly used in graphics applications to optimize rendering.
 
